@@ -1,0 +1,9 @@
+PREFIX CHEBI: <http://purl.obolibrary.org/obo/CHEBI_>
+PREFIX npo:   <http://purl.bioontology.org/ontology/npo#>
+
+SELECT DISTINCT ?resource ?component WHERE {
+  ?resource a CHEBI:59999 .
+  OPTIONAL { ?resource npo:has_part ?component }
+  FILTER(!BOUND(?component))
+}
+

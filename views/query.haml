@@ -1,4 +1,27 @@
 :javascript
+  var HttpClient = function() {
+    this.get = function(aUrl, aCallback) {
+    var anHttpRequest = new XMLHttpRequest();
+    anHttpRequest.onreadystatechange = function() {
+    if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+      aCallback(anHttpRequest.responseText)
+    }
+      anHttpRequest.open( "GET", aUrl, true );
+      anHttpRequest.send( null )
+    }
+  };
+  function loadResponse() {
+    var div = document.getElementById("response");
+        div.innerHTML = "";
+    var sparql = d3.select("#sparqlDownload").property("value");
+    var type = d3.select("#selType").property("value");
+    aClient = new HttpClient();
+    aClient.get("#{to("/response")}"+"?query_type="+escape(type)+"&queryfield="+escape(sparql), function(response) {
+      var details = document.createElement("div");
+      details.innerHTML = response;
+      document.getElementById("response").appendChild(details)
+    });
+  }
   function renderA(json) {
     if (json == ("malformed query" || "error processing query or fetching data")){
       document.getElementById("result").innerHTML = "<p class=\"error\">"+json
@@ -54,6 +77,10 @@
     var sparql = d3.select("#sparqlDownload").property("value");
     $('#inputquery').val(sparql)
   }
+  function refresh_template(id){
+    var sparql = d3.select("#hiddenField_"+id).property("value");
+    $('#sparqlDownload').val(sparql)
+  }
 
 #query{:style => "margin: 10px"}
   %ul.nav.nav-tabs
@@ -69,57 +96,78 @@
       
     // tab 1 viewer  
     #viewer.tab-pane.fade.in.active
-      %textarea#sparql{:rows => "12", :cols=>"85"}
-        :preserve
-          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      %div.col-md-6{:style=>"padding:0;"}
+        %textarea#sparql.col-md-12{:rows => "12", :cols=>"85", :style=>"padding:0;max-width:100%"}
+          :preserve
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-          SELECT DISTINCT ?root_name ?parent_name ?child_name WHERE {
-            VALUES ?root_name { "endpoint" }
-            ?root rdfs:label ?root_name .
-            ?child rdfs:subClassOf{,5} ?root .
-            ?child rdfs:subClassOf ?parent .
-            ?child rdfs:label ?child_name .
-            ?parent rdfs:label ?parent_name .
-          }
-      %form.form-inline
-        %div.btn-group  
-          %div.btn-group
-            %button.btn.btn-default.dropdown-toggle{:type=>"button", :data=>{:toggle=>"dropdown"}}
-              Query
-              %b.caret
-            %ul.dropdown-menu
-              %li.btn{:onclick => "exec_offline('A')"} Dendrogram
-              %li.divider
-              %li.btn{:onclick => "exec_offline('B')"} Sunburst
-          %button.btn.btn-default{:type=>"button", :type=>"button", :onclick=>"toggle()"}
-            %span.glyphicon.glyphicon-chevron-up{:id=>"button"}
+            SELECT DISTINCT ?root_name ?parent_name ?child_name WHERE {
+              VALUES ?root_name { "endpoint" }
+              ?root rdfs:label ?root_name .
+              ?child rdfs:subClassOf{,5} ?root .
+              ?child rdfs:subClassOf ?parent .
+              ?child rdfs:label ?child_name .
+              ?parent rdfs:label ?parent_name .
+            }
+        %form.form-inline
+          %div.btn-group  
+            %div.btn-group
+              %button.btn.btn-default.dropdown-toggle{:type=>"button", :data=>{:toggle=>"dropdown"}}
+                Query
+                %b.caret
+              %ul.dropdown-menu
+                %li.btn{:onclick => "exec_offline('A')"} Dendrogram
+                %li.divider
+                %li.btn{:onclick => "exec_offline('B')"} Sunburst
+            %button.btn.btn-default{:type=>"button", :type=>"button", :onclick=>"toggle()"}
+              %span.glyphicon.glyphicon-chevron-up{:id=>"button"}
+      #result
 
     // tab 2 sparql
     #download.tab-pane.fade
-      %textarea#sparqlDownload{:rows => "12", :cols=>"85"}
-        :preserve
-          PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-          PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      %div.col-md-6{:style=>"padding:0;"}
+        %textarea#sparqlDownload.col-md-12{:rows => "12", :cols=>"85", :style=>"padding:0;max-width:100%"}
+          :preserve
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-          SELECT DISTINCT * WHERE {
-            ?s ?p ?o;
-            rdfs:label "toxicological endpoint"@en.
-          } LIMIT 100
-      %form.form-inline{:id=>"form2", :role=>"form", :action=> to("/download"), :method=>"get"}
-        %div.form-group
-          %select.form-control{:id=>"selType", :autocomplete=>"off", :name=>"query_type",:value=>""}
-            %optgroup{:label=>"SELECT"}
-            - @accepted_select.sort.each do |type|
-              %option{:value => type}= type
-            %optgroup{:label=>"CONSTRUCT"}
-            - @accepted_construct.sort.each do |type|
-              %option{:value => type}= type
-          %input#inputquery{:type=>"hidden",:name=>"queryfield", :value=>""}
-        %button.btn.btn-default{:id=>"submitbutton", :type=>"submit", :onclick=>"sparqlValue();"} download
+            SELECT DISTINCT * WHERE {
+              ?s ?p ?o;
+              rdfs:label "toxicological endpoint"@en.
+            } LIMIT 100
+        - @examples.each_with_index do |example,idx|
+          %textarea#hiddenField{:id=>idx, :style=>"display:none;"}
+            :preserve
+              #{File.read(File.join("public/examples/"+example[0]))}
+        %form.form-inline.col-md-12{:id=>"form2", :role=>"form", :action=> to("/download"), :method=>"get", :style=>"padding:0;"}
+          %div.form-group
+            %select.form-control{:id=>"selType", :autocomplete=>"off", :name=>"query_type",:value=>""}
+              %optgroup{:label=>"SELECT"}
+              - @accepted_select.sort.each do |type|
+                %option{:value => type}= type
+              %optgroup{:label=>"CONSTRUCT"}
+              - @accepted_construct.sort.each do |type|
+                %option{:value => type}= type
+            %input#inputquery{:type=>"hidden",:name=>"queryfield", :value=>""}
+          %button.btn.btn-default{:id=>"submitSubmit", :type=>"button", :onclick=>"loadResponse();"} submit
+          %button.btn.btn-default{:id=>"submitDownload", :type=>"submit", :onclick=>"sparqlValue();"} download
+      
+      %div.col-md-6{:style=>"padding:0;"}
+        %examples.col-md-12
+          %h3 Example Queries
+          %p Physico-Chemical Characteristics
+          %fieldset
+            - @examples.each_with_index do |example, idx|
+              %input{:id=> idx, :type=>"radio", :name=>"examples", :value=>"", :onclick=>"refresh_template(#{idx})"}
+                = example[0]
+              %br
+              %label{:for=>example[0]}
+                = example[1]
+              %br
+      #response.col-md-12{:style => "padding:30px 0 0 0;"}
 
     // tab 3 help
     #help.tab-pane.fade
       = haml :help      
 
-#result

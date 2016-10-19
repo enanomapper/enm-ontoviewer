@@ -1,0 +1,19 @@
+PREFIX chebi: <http://purl.obolibrary.org/obo/CHEBI_>
+PREFIX npo:   <http://purl.bioontology.org/ontology/npo#>
+PREFIX obo:   <http://purl.obolibrary.org/obo/>
+PREFIX bao:   <http://www.bioassayontology.org/bao#>
+PREFIX sio:   <http://semanticscience.org/resource/>
+
+SELECT DISTINCT ?resource ?epLabel ?value ?unit WHERE {
+  ?resource a chebi:59999 .
+  OPTIONAL {
+    ?resource obo:BFO_0000056 ?feature .
+    ?feature a ?featureType ;
+      obo:OBI_0000299 ?endpoint .
+    ?endpoint sio:has-value ?value ;
+              sio:has-unit ?unit ;
+              rdfs:label ?epLabel.
+  }
+  BIND("PARTICLE SIZE" AS ?epLabel)
+  FILTER(BOUND(?endpoint))
+}
