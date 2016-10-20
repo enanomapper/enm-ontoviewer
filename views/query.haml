@@ -4,24 +4,27 @@
     var anHttpRequest = new XMLHttpRequest();
     anHttpRequest.onreadystatechange = function() {
     if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
-      aCallback(anHttpRequest.responseText)
+      aCallback(anHttpRequest.responseText);
     }
       anHttpRequest.open( "GET", aUrl, true );
-      anHttpRequest.send( null )
+      anHttpRequest.send( null );
     }
-  };
-  function loadResponse() {
-    var div = document.getElementById("response");
+  };  
+
+  function renderResponse() {
+    var type = "text/html";
+    var query = d3.select("#sparqlDownload").property("value");
+    var uri = "#{to("/download?query_type=")}"+type+"&queryfield="+escape(query);
+    var div = document.getElementById("render");
         div.innerHTML = "";
-    var sparql = d3.select("#sparqlDownload").property("value");
-    var type = d3.select("#selType").property("value");
     aClient = new HttpClient();
-    aClient.get("#{to("/response")}"+"?query_type="+escape(type)+"&queryfield="+escape(sparql), function(response) {
-      var details = document.createElement("div");
-      details.innerHTML = response;
-      document.getElementById("response").appendChild(details)
+    aClient.get(uri, function(response) {
+      var el = document.createElement("response");
+      el.innerHTML = response;
+      document.getElementById("render").appendChild(el);
     });
-  }
+  }  
+
   function renderA(json) {
     if (json == ("malformed query" || "error processing query or fetching data")){
       document.getElementById("result").innerHTML = "<p class=\"error\">"+json
@@ -73,7 +76,8 @@
   }
 
   // get sparql value
-  function sparqlValue(){
+  function sparqlValue(type){
+    $('#renderType').val(type)
     var sparql = d3.select("#sparqlDownload").property("value");
     $('#inputquery').val(sparql)
   }
@@ -150,8 +154,9 @@
               - @accepted_construct.sort.each do |type|
                 %option{:value => type}= type
             %input#inputquery{:type=>"hidden",:name=>"queryfield", :value=>""}
-          %button.btn.btn-default{:id=>"submitSubmit", :type=>"button", :onclick=>"loadResponse();"} submit
-          %button.btn.btn-default{:id=>"submitDownload", :type=>"submit", :onclick=>"sparqlValue();"} download
+            %input#renderType{:type=>"hidden",:name=>"renderType", :value=>""}
+          %button.btn.btn-default{:id=>"submitSubmit", :type=>"button", :title=>"render as HTML table", :onclick=>"renderResponse();"} render
+          %button.btn.btn-default{:id=>"submitDownload", :type=>"submit", :title=>"download as file", :onclick=>"sparqlValue('attachment');"} download
       
       %div.col-md-6{:style=>"padding:0;"}
         %examples.col-md-12
@@ -165,7 +170,7 @@
               %label{:for=>example[0]}
                 = example[1]
               %br
-      #response.col-md-12{:style => "padding:30px 0 0 0;"}
+      #render.col-md-12{:style=>"padding:0;margin-top:50px;minwidth:100%;maxwidth:100%;"}
 
     // tab 3 help
     #help.tab-pane.fade

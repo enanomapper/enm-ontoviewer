@@ -2,3 +2,9 @@
   margin: 5em;
   font-weight: bold;
 }
+table.sparql th {
+  padding: 5px;
+}
+table.sparql td {
+  padding: 5px;
+}

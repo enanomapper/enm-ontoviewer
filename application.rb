@@ -105,7 +105,11 @@ get "/download" do
       elsif response.code == 200
         file.write(response)
         file.rewind
-        send_file(file, :disposition => 'attachment', :filename => File.basename(file), :type => type)
+        if params[:renderType]
+          send_file(file, :disposition => params[:renderType], :filename => File.basename(file), :type => type)
+        else
+          return response
+        end
       end
       file.close
       file.unlink
@@ -114,28 +118,7 @@ get "/download" do
     return "#{type} is not supported content type.\n"
   end
 end
-    
-# render results in page
-get "/response" do
-  type = params[:query_type]
-  sparqlstring = params[:queryfield]
-  halt 400, "Not allowed SPARQL keyword.\n" if !!(sparqlstring =~ /\b(delete|insert|load|clear)\b/i)
 
-  if (sparqlstring =~ /\b(select)\b/i ? @accepted_select.include?(type) : @accepted_construct.include?(type) )
-    RestClient::Resource.new(URI.encode("#{$service_uri}/sparql/?query=#{sparqlstring}"), :verify_ssl => 0, :headers => {:accept => type}).get do |response, request, result|
-      if response.code == 400
-        halt response.code, "malformed query\n"
-      elsif response.code > 400
-        halt response.code, "error processing query or fetching data\n"
-      elsif response.code == 200
-        return response.body
-      end
-    end
-  else
-    return "#{type} is not supported content type.\n"
-  end
-end
-    
 get '/license' do
   haml :license
 end
