@@ -12,8 +12,9 @@ SELECT DISTINCT ?resource ?epLabel ?value ?unit WHERE {
       obo:OBI_0000299 ?endpoint .
     ?endpoint sio:has-value ?value ;
               sio:has-unit ?unit ;
-              rdfs:label ?epLabel.
+              rdfs:label ?endpLabel.
   }
   BIND("ZETA POTENTIAL" AS ?epLabel)
-  FILTER(!BOUND(?endpoint))
+  FILTER(BOUND(?endpoint))
+  FILTER(?unit ="mV")
 }

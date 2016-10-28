@@ -1,4 +1,15 @@
 :javascript
+  $(document).ready(function() {
+    $('#selType').on('change', function() {
+      var el = document.getElementById('selType');
+      var button = document.getElementById('submitRender');
+      if (el.value == "text/html"){
+        button.style.display='inline';
+      }else{
+        button.style.display='none';
+      }
+    });
+  });
   var HttpClient = function() {
     this.get = function(aUrl, aCallback) {
     var anHttpRequest = new XMLHttpRequest();
@@ -14,14 +25,23 @@
   function renderResponse() {
     var type = "text/html";
     var query = d3.select("#sparqlDownload").property("value");
-    var uri = "#{to("/download?query_type=")}"+type+"&queryfield="+escape(query);
+    var uri = "#{to("/download?queryType=")}"+type+"&queryField="+escape(query);
     var div = document.getElementById("render");
         div.innerHTML = "";
-    aClient = new HttpClient();
-    aClient.get(uri, function(response) {
-      var el = document.createElement("response");
-      el.innerHTML = response;
-      document.getElementById("render").appendChild(el);
+        aClient = new HttpClient();
+        aClient.get(uri, function(response) {
+        var el = document.createElement("response");
+        el.innerHTML = response;
+        document.getElementById("render").appendChild(el);
+        $(".sparql a").click(function() {
+          var t = $(this).text();
+          $(this).attr('alt', 'Link opens in new window.');
+          $(this).attr('title', 'Link opens in new window.');
+          $(this).attr('target', '_blank');
+          if (t.includes("onto")){
+            $(this).attr('href', 'http://bioportal.bioontology.org/ontologies/ENM/?p=classes&conceptid='+escape(t));
+          };
+        });
     });
   }  
 
@@ -89,11 +109,11 @@
 #query{:style => "margin: 10px"}
   %ul.nav.nav-tabs
     %li.active
-      %a{:href=>"#viewer", :data=>{:toggle=>"tab"}, :onclick=>"clearView();"} Viewer
+      %a{:href=>"#viewer", :data=>{:toggle=>"tab"}, :onclick=>"clearView();"} VIEWER
     %li
-      %a{:href=>"#download", :data=>{:toggle=>"tab"}, :onclick=>"clearView();"} Sparql
+      %a{:href=>"#download", :data=>{:toggle=>"tab"}, :onclick=>"clearView();"} SPARQL
     %li
-      %a{:href=>"#help", :data=>{:toggle=>"tab"}, :onclick=>"clearView();"} Help
+      %a{:href=>"#help", :data=>{:toggle=>"tab"}, :onclick=>"clearView();"} HELP
 
   %div.tab-content{:style=>"padding-top:2em;"}
     %input#endpoint{:size=>"50",:type => "text", :value => to("/search/"), :disabled=>"disabled", :style=>"display:none;"}
@@ -146,16 +166,17 @@
               #{File.read(File.join("public/examples/"+example[0]))}
         %form.form-inline.col-md-12{:id=>"form2", :role=>"form", :action=> to("/download"), :method=>"get", :style=>"padding:0;"}
           %div.form-group
-            %select.form-control{:id=>"selType", :autocomplete=>"off", :name=>"query_type",:value=>""}
+            %select.form-control{:id=>"selType", :autocomplete=>"off", :name=>"queryType",:value=>""}
               %optgroup{:label=>"SELECT"}
               - @accepted_select.sort.each do |type|
-                %option{:value => type}= type
+                %option{:value => type, :style => ("color:green;" if type == "text/html")}= type
               %optgroup{:label=>"CONSTRUCT"}
               - @accepted_construct.sort.each do |type|
                 %option{:value => type}= type
-            %input#inputquery{:type=>"hidden",:name=>"queryfield", :value=>""}
+            %input#inputquery{:type=>"hidden",:name=>"queryField", :value=>""}
             %input#renderType{:type=>"hidden",:name=>"renderType", :value=>""}
-          %button.btn.btn-default{:id=>"submitSubmit", :type=>"button", :title=>"render as HTML table", :onclick=>"renderResponse();"} render
+          %button.btn.btn-default{:id=>"submitRender", :type=>"button", :title=>"render as HTML table", :onclick=>"renderResponse();", :style=>"display:none;color:green;"} render
+          -#%button.btn.btn-default{:id=>"submitRender", :type=>"submit", :title=>"download as file", :onclick=>"sparqlValue('inline');"} render
           %button.btn.btn-default{:id=>"submitDownload", :type=>"submit", :title=>"download as file", :onclick=>"sparqlValue('attachment');"} download
       
       %div.col-md-6{:style=>"padding:0;"}
@@ -164,10 +185,8 @@
           %p Physico-Chemical Characteristics
           %fieldset
             - @examples.each_with_index do |example, idx|
-              %input{:id=> idx, :type=>"radio", :name=>"examples", :value=>"", :onclick=>"refresh_template(#{idx})"}
-                = example[0]
-              %br
-              %label{:for=>example[0]}
+              %input{:id=> idx, :type=>"radio", :name=>"examples", :value=>idx, :onclick=>"refresh_template(#{idx})"}
+              %label{:for=>idx}
                 = example[1]
               %br
       #render.col-md-12{:style=>"padding:0;margin-top:50px;minwidth:100%;maxwidth:100%;"}

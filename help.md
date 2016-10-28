@@ -8,4 +8,4 @@ Please also note the part `{,5}` which is a [property path](https://www.w3.org/T
  
 ---
 #### Sparql
-This page allows you to write [SPARQL](https://www.w3.org/TR/rdf-sparql-query/) queries without any restrictions and with full [SPARQL](https://www.w3.org/TR/rdf-sparql-query/) syntax support including subqueries. The result can be downloaded to your computer. Please choose one of the output formats from the drop-down list.
+This page allows you to write [SPARQL](https://www.w3.org/TR/rdf-sparql-query/) queries without any restrictions and with full [SPARQL](https://www.w3.org/TR/rdf-sparql-query/) syntax support including subqueries. The result can be downloaded to your computer. Please choose one of the output formats from the drop-down list. There is also an option to render results as HTML table to the page.

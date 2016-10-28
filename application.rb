@@ -70,11 +70,16 @@ get '/search/:query?' do
 end
 
 # sparql endpoint access
-get '/sparql/:query?' do
+#get '/sparql/:query?' do
+get '/sparql/?' do
+  halt 400, "Missing query parameter.\n" unless params[:query]
+  halt 400, "Missing query parameter.\n" if params[:query].empty?
   sparqlstring = params[:query]
   halt 400, "Not allowed SPARQL keyword.\n" if !!(sparqlstring =~ /\b(delete|insert|load|clear)\b/i)
   type = request.env["HTTP_ACCEPT"]
-  if (sparqlstring =~ /^select/i ? @accepted_select.include?(type) : @accepted_construct.include?(type) )
+  
+  #if (sparqlstring =~ /^select/i ? @accepted_select.include?(type) : @accepted_construct.include?(type) )
+  if ( @accepted_select.include?(type) || @accepted_construct.include?(type) )
     RestClient::Resource.new(URI.encode("#{$service_uri}/sparql/?query=#{sparqlstring}"), :verify_ssl => 0, :headers => {:accept => type } ).get do |response,request,result|
       if response.code == 400
         halt response.code, "malformed query\n"
@@ -91,12 +96,12 @@ end
 
 # sparql result as file download in various formats
 get "/download" do
-  type = params[:query_type]
-  sparqlstring = params[:queryfield]
+  type = params[:queryType]
+  sparqlstring = params[:queryField]
   halt 400, "Not allowed SPARQL keyword.\n" if !!(sparqlstring =~ /\b(delete|insert|load|clear)\b/i)
   file = Tempfile.new("enm")
-
-  if (sparqlstring =~ /\b(select)\b/i ? @accepted_select.include?(type) : @accepted_construct.include?(type) )
+  #TODO check for SELECT keyword else return a message instead wrong type
+  if ( @accepted_select.include?(type) || @accepted_construct.include?(type) )
     RestClient::Resource.new(URI.encode("#{$service_uri}/sparql/?query=#{sparqlstring}"), :verify_ssl => 0, :headers => {:accept => type}).get do |response, request, result|
       if response.code == 400
         halt response.code, "malformed query\n"
