@@ -39,9 +39,9 @@ before do
     "application/ld+json"
   ]
   @examples = [
-    ["example1", "Particle Size (Distribution)"],
+    ["example1", "Particle Size (with nm units)"],
     ["example2", "All ENMs have at least one chemical component"],
-    ["example3", "Surface charge"]
+    ["example3", "Surface charge (positive zeta potential)"]
   ]
 end
 

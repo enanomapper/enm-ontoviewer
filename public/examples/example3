@@ -17,4 +17,5 @@ SELECT DISTINCT ?resource ?epLabel ?value ?unit WHERE {
   BIND("ZETA POTENTIAL" AS ?epLabel)
   FILTER(BOUND(?endpoint))
   FILTER(?unit ="mV")
+  FILTER(?value > 0)
 }
